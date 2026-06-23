@@ -7,13 +7,34 @@ The backend storage direction is:
 - Development: SQLite
 - Production: PostgreSQL
 
-The current MVP still uses JSON files for feedback, audit records, local knowledge cases, and mock fixtures. The next persistence slice should replace those JSON stores with repository interfaces backed by SQLite in development and PostgreSQL in production.
+The current MVP uses SQLite for write-path application data in development:
+
+- feedback records
+- audit records
+- local engineer-created knowledge cases
+
+JSON files remain for checked-in seed/fixture data:
+
+- mock alerts
+- mock events
+- SOP actions
+- context policies
+- seed knowledge cases
+- role policies
+
+PostgreSQL is reserved for production. The code recognizes PostgreSQL-style `DATABASE_URL` values as a production target, but the active repository implementation is SQLite.
 
 Planned environment variable:
 
 ```text
 DATABASE_URL=sqlite:///data/alarm_agent.db
 DATABASE_URL=postgresql://user:password@host:5432/alarm_agent
+```
+
+Initialize SQLite locally:
+
+```powershell
+& 'C:\Python313\python.exe' scripts\init_db.py
 ```
 
 ## Vector Database
@@ -33,6 +54,8 @@ Planned environment variables:
 CHROMA_PERSIST_DIRECTORY=data/chroma
 CHROMA_COLLECTION=process_knowledge
 ```
+
+The current code provides a reserved `ChromaProcessKnowledgeStore` boundary so the retrieval implementation can be added without changing the analyzer interface later.
 
 ## LLM Explanation Layer
 

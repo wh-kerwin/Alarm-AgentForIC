@@ -25,8 +25,8 @@ class RoleSafetyTests(unittest.TestCase):
 
     def test_audit_records_can_be_filtered_by_alert(self):
         with tempfile.TemporaryDirectory() as tmp:
-            audit_file = Path(tmp) / "audit.json"
-            with patch("server.storage.AUDIT_FILE", audit_file):
+            db_url = f"sqlite:///{Path(tmp) / 'test.db'}"
+            with patch.dict("os.environ", {"DATABASE_URL": db_url}):
                 save_audit_record("analysis_requested", "EE", "ALM-1", "Generated analysis")
                 save_audit_record("analysis_requested", "PE", "ALM-2", "Generated analysis")
 
@@ -38,4 +38,3 @@ class RoleSafetyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

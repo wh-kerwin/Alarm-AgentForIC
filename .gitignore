@@ -49,6 +49,9 @@ public/assets/generated/
 data/feedback.json
 data/knowledge_cases.local.json
 data/audit_log.json
+data/*.db
+data/*.db-*
+data/chroma/
 *.db
 *.sqlite
 *.sqlite3

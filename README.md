@@ -130,6 +130,14 @@ Backend storage direction is documented in `docs/architecture/backend-services.m
 - Production relational storage: PostgreSQL
 - Process knowledge vector database: ChromaDB
 
+Initialize the local SQLite database explicitly:
+
+```powershell
+& 'C:\Python313\python.exe' scripts\init_db.py
+```
+
+The application also initializes the SQLite schema automatically on first write/read through the repository layer.
+
 ## Not Included Yet
 
 - Real EAP/MES/FDC/SPC/YMS connectors

@@ -43,10 +43,10 @@ class KnowledgeCaseTests(unittest.TestCase):
     def test_create_and_find_local_knowledge_case(self):
         with tempfile.TemporaryDirectory() as tmp:
             seed = Path(tmp) / "seed.json"
-            local = Path(tmp) / "local.json"
             seed.write_text("[]", encoding="utf-8")
+            db_url = f"sqlite:///{Path(tmp) / 'test.db'}"
 
-            with patch("server.storage.KNOWLEDGE_SEED_FILE", seed), patch("server.storage.KNOWLEDGE_LOCAL_FILE", local):
+            with patch("server.storage.KNOWLEDGE_SEED_FILE", seed), patch.dict("os.environ", {"DATABASE_URL": db_url}):
                 created = create_knowledge_case(
                     {
                         "alarm_code": "VAC-LOW-302",
