@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from server.analyzer import analyze_alert, get_alert, list_alerts
+from server.evaluation import build_evaluation_metrics
 from server.models import FeedbackRecord
 from server.roles import list_role_policies
 from server.storage import (
@@ -52,6 +53,8 @@ class AppHandler(BaseHTTPRequestHandler):
             return self._json(list_knowledge_cases())
         if parsed.path == "/api/audit":
             return self._json(list_audit_records())
+        if parsed.path == "/api/evaluation":
+            return self._json(build_evaluation_metrics(self._role()))
         if parsed.path.startswith("/api/alerts/"):
             parts = parsed.path.strip("/").split("/")
             if len(parts) == 3:

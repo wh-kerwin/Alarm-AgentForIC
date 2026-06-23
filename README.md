@@ -70,6 +70,7 @@ npm run build
 - Role-aware advisory mode for EE/PE/QE/PIE/Shift Lead/Admin
 - Audit trail for analysis, feedback, and knowledge-case creation
 - Evidence-only LLM explanation layer with OpenAI support and DeepSeek/Qwen placeholders
+- Evaluation dashboard backed by SQLite feedback/audit data and current alert analysis
 
 ## API Highlights
 
@@ -83,6 +84,7 @@ npm run build
 - `GET /api/roles`
 - `GET /api/alerts/{alert_id}/audit`
 - `GET /api/audit`
+- `GET /api/evaluation`
 
 ## Connector Boundary
 
@@ -137,6 +139,20 @@ Initialize the local SQLite database explicitly:
 ```
 
 The application also initializes the SQLite schema automatically on first write/read through the repository layer.
+
+## Evaluation Metrics
+
+The evaluation dashboard calculates local MVP metrics from mock alerts plus SQLite feedback/audit/local case data:
+
+- alert severity and status distribution
+- feedback coverage
+- Top 1 and Top 3 selected-cause adoption
+- recurrence risk distribution
+- unresolved high-priority alerts
+- missing required/optional context source counts
+- analysis request counts
+
+Response-time metrics are documented as unavailable until real alert receipt and acknowledgement timestamps are captured.
 
 ## Not Included Yet
 

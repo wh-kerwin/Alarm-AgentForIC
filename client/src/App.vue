@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { analyzeAlert, createKnowledgeCase, getAlerts, getAudit, getFeedback, getHealth, getRelatedKnowledgeCases, getRoles, submitFeedback } from './api'
+import { analyzeAlert, createKnowledgeCase, getAlerts, getAudit, getEvaluation, getFeedback, getHealth, getRelatedKnowledgeCases, getRoles, submitFeedback } from './api'
 import AlertSummary from './components/AlertSummary.vue'
 import AuditPanel from './components/AuditPanel.vue'
 import ContextPolicyPanel from './components/ContextPolicyPanel.vue'
 import FeedbackPanel from './components/FeedbackPanel.vue'
+import EvaluationDashboard from './components/EvaluationDashboard.vue'
 import KnowledgeCasesPanel from './components/KnowledgeCasesPanel.vue'
 import LlmExplanationPanel from './components/LlmExplanationPanel.vue'
 import RecommendationPanel from './components/RecommendationPanel.vue'
@@ -12,7 +13,7 @@ import RoleSafetyPanel from './components/RoleSafetyPanel.vue'
 import RootCausesPanel from './components/RootCausesPanel.vue'
 import Sidebar from './components/Sidebar.vue'
 import TimelinePanel from './components/TimelinePanel.vue'
-import type { Alert, AnalysisResult, AuditRecord, FeedbackRecord, KnowledgeCase, RolePolicy } from './types'
+import type { Alert, AnalysisResult, AuditRecord, EvaluationMetrics, FeedbackRecord, KnowledgeCase, RolePolicy } from './types'
 
 const alerts = ref<Alert[]>([])
 const roles = ref<RolePolicy[]>([])
@@ -22,6 +23,7 @@ const analysis = ref<AnalysisResult | null>(null)
 const feedbackHistory = ref<FeedbackRecord[]>([])
 const relatedCases = ref<KnowledgeCase[]>([])
 const auditHistory = ref<AuditRecord[]>([])
+const evaluation = ref<EvaluationMetrics | null>(null)
 const apiStatus = ref('checking')
 const isAnalyzing = ref(false)
 const feedbackMessage = ref('')
@@ -71,12 +73,17 @@ async function refreshAlerts() {
   }
 }
 
+async function loadEvaluation() {
+  evaluation.value = await getEvaluation(currentRole.value)
+}
+
 async function runAnalysis() {
   if (!selectedAlertId.value) return
   isAnalyzing.value = true
   try {
     analysis.value = await analyzeAlert(selectedAlertId.value, currentRole.value)
     await loadAudit()
+    await loadEvaluation()
   } finally {
     isAnalyzing.value = false
   }
@@ -137,6 +144,7 @@ async function submitEngineerFeedback() {
   feedbackForm.notes = ''
   await loadFeedback()
   await loadAudit()
+  await loadEvaluation()
 }
 
 async function submitKnowledgeCase() {
@@ -157,6 +165,7 @@ async function submitKnowledgeCase() {
   await loadRelatedCases()
   await runAnalysis()
   await loadAudit()
+  await loadEvaluation()
 }
 
 async function changeRole(role: string) {
@@ -167,6 +176,7 @@ async function changeRole(role: string) {
     await loadFeedback()
     await loadRelatedCases()
     await loadAudit()
+    await loadEvaluation()
   }
 }
 
@@ -180,6 +190,7 @@ onMounted(async () => {
   }
 
   await refreshAlerts()
+  await loadEvaluation()
   if (selectedAlertId.value) {
     await runAnalysis()
     await loadFeedback()
@@ -218,6 +229,7 @@ onMounted(async () => {
       </header>
 
       <AlertSummary v-if="selectedAlert" :alert="selectedAlert" :scope="scope" />
+      <EvaluationDashboard :metrics="evaluation" />
 
       <div class="grid">
         <div class="main-stack">

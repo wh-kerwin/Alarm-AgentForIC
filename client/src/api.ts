@@ -1,4 +1,4 @@
-import type { Alert, AnalysisResult, AuditRecord, FeedbackRecord, KnowledgeCase, RolePolicy } from './types'
+import type { Alert, AnalysisResult, AuditRecord, EvaluationMetrics, FeedbackRecord, KnowledgeCase, RolePolicy } from './types'
 
 async function request<T>(path: string, role: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(path, {
@@ -24,6 +24,10 @@ export function getRoles(role: string) {
 
 export function getAlerts(role: string) {
   return request<Alert[]>('/api/alerts', role)
+}
+
+export function getEvaluation(role: string) {
+  return request<EvaluationMetrics>('/api/evaluation', role)
 }
 
 export function analyzeAlert(alertId: string, role: string) {

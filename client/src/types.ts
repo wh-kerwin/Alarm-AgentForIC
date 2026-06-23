@@ -152,3 +152,34 @@ export interface AuditRecord {
   created_at: string
   metadata: Record<string, unknown>
 }
+
+export interface EvaluationMetrics {
+  summary: {
+    total_alerts: number
+    critical_alerts: number
+    high_alerts: number
+    feedback_records: number
+    alerts_with_feedback: number
+    knowledge_cases: number
+    analysis_requests: number
+    unresolved_high_priority: number
+  }
+  quality: {
+    top1_adoption_rate: number
+    top3_adoption_rate: number
+    feedback_coverage_rate: number
+    recommendation_feedback_count: number
+  }
+  risk: {
+    recurrence_risk: Record<string, number>
+    unresolved_alert_ids: string[]
+    missing_required_sources_total: number
+    missing_optional_sources_total: number
+  }
+  distribution: {
+    severity: Record<string, number>
+    status: Record<string, number>
+    audit_actions: Record<string, number>
+  }
+  notes: string[]
+}
