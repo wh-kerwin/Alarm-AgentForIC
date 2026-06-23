@@ -12,7 +12,16 @@ from urllib.parse import urlparse
 
 from server.analyzer import analyze_alert, get_alert, list_alerts
 from server.models import FeedbackRecord
-from server.storage import create_knowledge_case, find_knowledge_cases, list_feedback, list_knowledge_cases, save_feedback
+from server.roles import list_role_policies
+from server.storage import (
+    create_knowledge_case,
+    find_knowledge_cases,
+    list_audit_records,
+    list_feedback,
+    list_knowledge_cases,
+    save_audit_record,
+    save_feedback,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC_DIR = ROOT / "client" / "dist"
@@ -37,8 +46,12 @@ class AppHandler(BaseHTTPRequestHandler):
             return self._json({"status": "ok", "version": "0.1.0"})
         if parsed.path == "/api/alerts":
             return self._json(list_alerts())
+        if parsed.path == "/api/roles":
+            return self._json(list_role_policies())
         if parsed.path == "/api/knowledge-cases":
             return self._json(list_knowledge_cases())
+        if parsed.path == "/api/audit":
+            return self._json(list_audit_records())
         if parsed.path.startswith("/api/alerts/"):
             parts = parsed.path.strip("/").split("/")
             if len(parts) == 3:
@@ -48,11 +61,13 @@ class AppHandler(BaseHTTPRequestHandler):
                 return self._json(alert)
             if len(parts) == 4 and parts[3] == "analysis":
                 try:
-                    return self._json(analyze_alert(parts[2]))
+                    return self._json(analyze_alert(parts[2], self._role()))
                 except KeyError:
                     return self._json({"error": "alert_not_found"}, status=404)
             if len(parts) == 4 and parts[3] == "feedback":
                 return self._json(list_feedback(parts[2]))
+            if len(parts) == 4 and parts[3] == "audit":
+                return self._json(list_audit_records(parts[2]))
             if len(parts) == 4 and parts[3] == "knowledge-cases":
                 alert = get_alert(parts[2])
                 if alert is None:
@@ -66,7 +81,15 @@ class AppHandler(BaseHTTPRequestHandler):
         if parsed.path.startswith("/api/alerts/") and parsed.path.endswith("/analyze"):
             alert_id = parsed.path.strip("/").split("/")[2]
             try:
-                return self._json(analyze_alert(alert_id))
+                result = analyze_alert(alert_id, self._role())
+                save_audit_record(
+                    "analysis_requested",
+                    self._role(),
+                    alert_id,
+                    "Root-cause analysis generated.",
+                    {"policy_id": result.collection_status.policy.policy_id},
+                )
+                return self._json(result)
             except KeyError:
                 return self._json({"error": "alert_not_found"}, status=404)
 
@@ -87,12 +110,28 @@ class AppHandler(BaseHTTPRequestHandler):
             )
             if not record.final_root_cause or not record.action_taken:
                 return self._json({"error": "final_root_cause_and_action_taken_required"}, status=400)
-            return self._json(save_feedback(record), status=201)
+            saved = save_feedback(record)
+            save_audit_record(
+                "feedback_recorded",
+                self._role(),
+                alert_id,
+                "Engineer feedback recorded.",
+                {"feedback_id": saved.feedback_id, "selected_cause_rank": saved.selected_cause_rank},
+            )
+            return self._json(saved, status=201)
 
         if parsed.path == "/api/knowledge-cases":
             body = self._read_json_body()
             try:
-                return self._json(create_knowledge_case(body), status=201)
+                saved = create_knowledge_case(body)
+                save_audit_record(
+                    "knowledge_case_created",
+                    self._role(),
+                    str(body.get("alert_id", "")),
+                    "Knowledge case created.",
+                    {"case_id": saved.case_id, "alarm_code": saved.alarm_code},
+                )
+                return self._json(saved, status=201)
             except ValueError as error:
                 return self._json({"error": str(error)}, status=400)
 
@@ -112,6 +151,9 @@ class AppHandler(BaseHTTPRequestHandler):
             return {}
         raw = self.rfile.read(length).decode("utf-8")
         return json.loads(raw)
+
+    def _role(self) -> str:
+        return self.headers.get("X-Agent-Role", "EE").upper()
 
     def _json(self, payload, status: int = 200):
         body = json.dumps(to_jsonable(payload), ensure_ascii=False, indent=2).encode("utf-8")
@@ -152,7 +194,7 @@ class AppHandler(BaseHTTPRequestHandler):
     def _cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Agent-Role")
 
 
 def run(host: str = "127.0.0.1", port: int = 8000):

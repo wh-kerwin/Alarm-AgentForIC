@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 
 from server.connectors import get_connector
 from server.models import Alert, AnalysisResult, CollectionStatus, Evidence, RootCauseCandidate
+from server.roles import build_role_context, build_safety_gate
 from server.storage import find_knowledge_cases
 
 
@@ -35,7 +36,7 @@ def _has_event(alert_id: str, event_type: str, text: str | None = None) -> bool:
     return False
 
 
-def analyze_alert(alert_id: str) -> AnalysisResult:
+def analyze_alert(alert_id: str, role: str | None = None) -> AnalysisResult:
     alert = get_alert(alert_id)
     if alert is None:
         raise KeyError(alert_id)
@@ -79,6 +80,8 @@ def analyze_alert(alert_id: str) -> AnalysisResult:
         ],
         data_sources=data_sources,
         collection_status=collection_status,
+        role_context=build_role_context(role, alert),
+        safety_gate=build_safety_gate(role, alert),
     )
 
 

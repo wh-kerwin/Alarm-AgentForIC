@@ -1,8 +1,8 @@
-import type { Alert, AnalysisResult, FeedbackRecord, KnowledgeCase } from './types'
+import type { Alert, AnalysisResult, AuditRecord, FeedbackRecord, KnowledgeCase, RolePolicy } from './types'
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(path: string, role: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(path, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-Agent-Role': role },
     ...options,
   })
 
@@ -14,24 +14,32 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>
 }
 
-export function getHealth() {
-  return request<{ status: string; version: string }>('/api/health')
+export function getHealth(role: string) {
+  return request<{ status: string; version: string }>('/api/health', role)
 }
 
-export function getAlerts() {
-  return request<Alert[]>('/api/alerts')
+export function getRoles(role: string) {
+  return request<RolePolicy[]>('/api/roles', role)
 }
 
-export function analyzeAlert(alertId: string) {
-  return request<AnalysisResult>(`/api/alerts/${alertId}/analyze`, { method: 'POST' })
+export function getAlerts(role: string) {
+  return request<Alert[]>('/api/alerts', role)
 }
 
-export function getFeedback(alertId: string) {
-  return request<FeedbackRecord[]>(`/api/alerts/${alertId}/feedback`)
+export function analyzeAlert(alertId: string, role: string) {
+  return request<AnalysisResult>(`/api/alerts/${alertId}/analyze`, role, { method: 'POST' })
 }
 
-export function getRelatedKnowledgeCases(alertId: string) {
-  return request<KnowledgeCase[]>(`/api/alerts/${alertId}/knowledge-cases`)
+export function getFeedback(alertId: string, role: string) {
+  return request<FeedbackRecord[]>(`/api/alerts/${alertId}/feedback`, role)
+}
+
+export function getAudit(alertId: string, role: string) {
+  return request<AuditRecord[]>(`/api/alerts/${alertId}/audit`, role)
+}
+
+export function getRelatedKnowledgeCases(alertId: string, role: string) {
+  return request<KnowledgeCase[]>(`/api/alerts/${alertId}/knowledge-cases`, role)
 }
 
 export function submitFeedback(alertId: string, payload: {
@@ -40,8 +48,8 @@ export function submitFeedback(alertId: string, payload: {
   action_taken: string
   recurrence_risk: 'high' | 'medium' | 'low'
   notes: string
-}) {
-  return request<FeedbackRecord>(`/api/alerts/${alertId}/feedback`, {
+}, role: string) {
+  return request<FeedbackRecord>(`/api/alerts/${alertId}/feedback`, role, {
     method: 'POST',
     body: JSON.stringify(payload),
   })
@@ -54,8 +62,9 @@ export function createKnowledgeCase(payload: {
   action: string
   tags: string[]
   source: string
-}) {
-  return request<KnowledgeCase>('/api/knowledge-cases', {
+  alert_id: string
+}, role: string) {
+  return request<KnowledgeCase>('/api/knowledge-cases', role, {
     method: 'POST',
     body: JSON.stringify(payload),
   })

@@ -67,6 +67,8 @@ npm run build
 - SOP/OCAP style handling recommendations
 - Engineer feedback storage in `data/feedback.json`
 - Knowledge case management through API and UI
+- Role-aware advisory mode for EE/PE/QE/PIE/Shift Lead/Admin
+- Audit trail for analysis, feedback, and knowledge-case creation
 
 ## API Highlights
 
@@ -77,6 +79,9 @@ npm run build
 - `GET /api/knowledge-cases`
 - `POST /api/knowledge-cases`
 - `GET /api/alerts/{alert_id}/knowledge-cases`
+- `GET /api/roles`
+- `GET /api/alerts/{alert_id}/audit`
+- `GET /api/audit`
 
 ## Connector Boundary
 
@@ -90,6 +95,13 @@ Mock data lives in:
 - `data/context_policies.json`
 - `data/sop.json`
 - `data/knowledge_cases.seed.json`
+- `data/role_policies.json`
+
+## Safety Boundary
+
+The Agent is advisory-only. It can generate analysis, recommendations, feedback records, cases, and audit records. It must not automatically release lots, modify recipes, change equipment parameters, or close high-severity alerts.
+
+The current role context is passed with `X-Agent-Role`. This is not authentication; it is an MVP role simulation for UI behavior, audit metadata, and safety messaging.
 
 ## Not Included Yet
 

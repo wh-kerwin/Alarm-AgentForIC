@@ -8,12 +8,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from server.models import FeedbackRecord, KnowledgeCase
+from server.models import AuditRecord, FeedbackRecord, KnowledgeCase
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 FEEDBACK_FILE = DATA_DIR / "feedback.json"
 KNOWLEDGE_SEED_FILE = DATA_DIR / "knowledge_cases.seed.json"
 KNOWLEDGE_LOCAL_FILE = DATA_DIR / "knowledge_cases.local.json"
+AUDIT_FILE = DATA_DIR / "audit_log.json"
 
 
 def _read_all() -> list[dict]:
@@ -83,4 +84,28 @@ def create_knowledge_case(payload: dict) -> KnowledgeCase:
     )
     rows.append(asdict(record))
     KNOWLEDGE_LOCAL_FILE.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+    return record
+
+
+def list_audit_records(alert_id: str | None = None) -> list[dict]:
+    rows = _read_json_list(AUDIT_FILE)
+    if alert_id:
+        return [row for row in rows if row["alert_id"] == alert_id]
+    return rows
+
+
+def save_audit_record(action: str, role: str, alert_id: str, summary: str, metadata: dict | None = None) -> AuditRecord:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    rows = _read_json_list(AUDIT_FILE)
+    record = AuditRecord(
+        audit_id=f"AUD-{uuid4().hex[:10].upper()}",
+        action=action,
+        role=role,
+        alert_id=alert_id,
+        summary=summary,
+        created_at=datetime.now(UTC).isoformat(timespec="seconds"),
+        metadata=metadata or {},
+    )
+    rows.append(asdict(record))
+    AUDIT_FILE.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
     return record

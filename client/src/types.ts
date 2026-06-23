@@ -81,6 +81,23 @@ export interface AnalysisResult {
   agent_limitations: string[]
   data_sources: string[]
   collection_status: CollectionStatus
+  role_context: {
+    role: string
+    label: string
+    focus: string
+    allowed_records: string[]
+    escalation_targets: string[]
+    alert_owner_role: string
+    is_owner_role: boolean
+  }
+  safety_gate: {
+    mode: string
+    requires_human_confirmation: boolean
+    blocked_actions: string[]
+    high_risk_actions: string[]
+    message: string
+    alert_severity: string
+  }
 }
 
 export interface FeedbackRecord {
@@ -103,4 +120,23 @@ export interface KnowledgeCase {
   tags: string[]
   source: string
   created_at: string
+}
+
+export interface RolePolicy {
+  role: string
+  label: string
+  focus: string
+  allowed_records: string[]
+  blocked_actions: string[]
+  escalation_targets: string[]
+}
+
+export interface AuditRecord {
+  audit_id: string
+  action: string
+  role: string
+  alert_id: string
+  summary: string
+  created_at: string
+  metadata: Record<string, unknown>
 }

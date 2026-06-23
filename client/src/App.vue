@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { analyzeAlert, createKnowledgeCase, getAlerts, getFeedback, getHealth, getRelatedKnowledgeCases, submitFeedback } from './api'
-import type { Alert, AnalysisResult, FeedbackRecord, KnowledgeCase } from './types'
+import { analyzeAlert, createKnowledgeCase, getAlerts, getAudit, getFeedback, getHealth, getRelatedKnowledgeCases, getRoles, submitFeedback } from './api'
+import type { Alert, AnalysisResult, AuditRecord, FeedbackRecord, KnowledgeCase, RolePolicy } from './types'
 
 const alerts = ref<Alert[]>([])
+const roles = ref<RolePolicy[]>([])
+const currentRole = ref('EE')
 const selectedAlertId = ref('')
 const analysis = ref<AnalysisResult | null>(null)
 const feedbackHistory = ref<FeedbackRecord[]>([])
 const relatedCases = ref<KnowledgeCase[]>([])
+const auditHistory = ref<AuditRecord[]>([])
 const apiStatus = ref('checking')
 const isAnalyzing = ref(false)
 const feedbackMessage = ref('')
@@ -28,6 +31,7 @@ const caseForm = reactive({
 })
 
 const selectedAlert = computed(() => alerts.value.find((alert) => alert.alert_id === selectedAlertId.value) ?? null)
+const selectedRolePolicy = computed(() => roles.value.find((role) => role.role === currentRole.value) ?? null)
 
 const metrics = computed(() => ({
   active: alerts.value.length,
@@ -50,7 +54,7 @@ const scope = computed(() => {
 })
 
 async function refreshAlerts() {
-  alerts.value = await getAlerts()
+  alerts.value = await getAlerts(currentRole.value)
   if (!selectedAlertId.value && alerts.value.length > 0) {
     selectedAlertId.value = alerts.value[0].alert_id
   }
@@ -60,7 +64,8 @@ async function runAnalysis() {
   if (!selectedAlertId.value) return
   isAnalyzing.value = true
   try {
-    analysis.value = await analyzeAlert(selectedAlertId.value)
+    analysis.value = await analyzeAlert(selectedAlertId.value, currentRole.value)
+    await loadAudit()
   } finally {
     isAnalyzing.value = false
   }
@@ -68,12 +73,17 @@ async function runAnalysis() {
 
 async function loadFeedback() {
   if (!selectedAlertId.value) return
-  feedbackHistory.value = await getFeedback(selectedAlertId.value)
+  feedbackHistory.value = await getFeedback(selectedAlertId.value, currentRole.value)
 }
 
 async function loadRelatedCases() {
   if (!selectedAlertId.value) return
-  relatedCases.value = await getRelatedKnowledgeCases(selectedAlertId.value)
+  relatedCases.value = await getRelatedKnowledgeCases(selectedAlertId.value, currentRole.value)
+}
+
+async function loadAudit() {
+  if (!selectedAlertId.value) return
+  auditHistory.value = await getAudit(selectedAlertId.value, currentRole.value)
 }
 
 async function selectAlert(alertId: string) {
@@ -92,6 +102,7 @@ async function selectAlert(alertId: string) {
   await runAnalysis()
   await loadFeedback()
   await loadRelatedCases()
+  await loadAudit()
 }
 
 async function submitEngineerFeedback() {
@@ -102,7 +113,7 @@ async function submitEngineerFeedback() {
     action_taken: feedbackForm.action_taken,
     recurrence_risk: feedbackForm.recurrence_risk,
     notes: feedbackForm.notes,
-  })
+  }, currentRole.value)
   feedbackMessage.value = '反馈已写入案例闭环。'
   feedbackForm.selected_cause_rank = ''
   feedbackForm.final_root_cause = ''
@@ -110,6 +121,7 @@ async function submitEngineerFeedback() {
   feedbackForm.recurrence_risk = 'medium'
   feedbackForm.notes = ''
   await loadFeedback()
+  await loadAudit()
 }
 
 async function submitKnowledgeCase() {
@@ -121,18 +133,31 @@ async function submitKnowledgeCase() {
     action: caseForm.action,
     tags: caseForm.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
     source: 'engineer',
-  })
+    alert_id: selectedAlert.value.alert_id,
+  }, currentRole.value)
   caseMessage.value = '案例已加入知识库，并会被后续分析复用。'
   caseForm.root_cause = ''
   caseForm.action = ''
   caseForm.tags = ''
   await loadRelatedCases()
   await runAnalysis()
+  await loadAudit()
+}
+
+async function changeRole() {
+  await refreshAlerts()
+  if (selectedAlertId.value) {
+    await runAnalysis()
+    await loadFeedback()
+    await loadRelatedCases()
+    await loadAudit()
+  }
 }
 
 onMounted(async () => {
   try {
-    const health = await getHealth()
+    roles.value = await getRoles(currentRole.value)
+    const health = await getHealth(currentRole.value)
     apiStatus.value = `API ${health.status}`
   } catch {
     apiStatus.value = 'API offline'
@@ -143,6 +168,7 @@ onMounted(async () => {
     await runAnalysis()
     await loadFeedback()
     await loadRelatedCases()
+    await loadAudit()
   }
 })
 </script>
@@ -157,6 +183,16 @@ onMounted(async () => {
           <small>Semiconductor Alert RCA</small>
         </div>
       </div>
+
+      <section class="role-panel">
+        <label>
+          当前角色
+          <select v-model="currentRole" @change="changeRole">
+            <option v-for="role in roles" :key="role.role" :value="role.role">{{ role.label }}</option>
+          </select>
+        </label>
+        <p v-if="selectedRolePolicy">{{ selectedRolePolicy.focus }}</p>
+      </section>
 
       <section class="metric-stack">
         <div class="metric">
@@ -302,6 +338,10 @@ onMounted(async () => {
             </div>
           </div>
           <template v-if="analysis">
+            <p class="safety-banner">
+              <strong>Advisory only</strong>
+              {{ analysis.safety_gate.message }}
+            </p>
             <ol class="recommendation-list">
               <li v-for="item in analysis.handling_recommendations" :key="item">{{ item }}</li>
             </ol>
@@ -314,6 +354,44 @@ onMounted(async () => {
             </div>
           </template>
           <p v-else class="empty">分析完成后显示 SOP/OCAP 处置建议。</p>
+        </section>
+
+        <section class="panel role-safety-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Role safety</p>
+              <h2>角色与安全边界</h2>
+            </div>
+          </div>
+          <template v-if="analysis">
+            <div class="policy-box">
+              <div class="scope-item">
+                <span>role</span>
+                <strong>{{ analysis.role_context.label }}</strong>
+              </div>
+              <div class="scope-item">
+                <span>owner match</span>
+                <strong>{{ analysis.role_context.is_owner_role ? 'yes' : 'no' }}</strong>
+              </div>
+            </div>
+            <p class="evidence">
+              <strong>角色关注点</strong>
+              {{ analysis.role_context.focus }}
+            </p>
+            <div class="policy-section">
+              <strong>升级对象</strong>
+              <div class="sources">
+                <span v-for="target in analysis.role_context.escalation_targets" :key="target" class="pill">{{ target }}</span>
+              </div>
+            </div>
+            <div class="policy-section">
+              <strong>禁止自动执行</strong>
+              <div class="sources">
+                <span v-for="action in analysis.safety_gate.blocked_actions" :key="action" class="pill critical">{{ action }}</span>
+              </div>
+            </div>
+          </template>
+          <p v-else class="empty">分析完成后显示角色安全边界。</p>
         </section>
 
         <section class="panel policy-panel">
@@ -465,6 +543,24 @@ onMounted(async () => {
               <span class="pill">{{ row.created_at }}</span>
             </div>
             <p v-if="feedbackHistory.length === 0" class="empty">暂无工程师反馈。</p>
+          </div>
+        </section>
+
+        <section class="panel audit-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Audit trail</p>
+              <h2>审计记录</h2>
+            </div>
+          </div>
+          <div class="feedback-history">
+            <div v-for="row in auditHistory" :key="row.audit_id" class="feedback-item">
+              <strong>{{ row.action }} · {{ row.role }}</strong>
+              <p>{{ row.summary }}</p>
+              <span class="pill">{{ row.audit_id }}</span>
+              <span class="pill">{{ row.created_at }}</span>
+            </div>
+            <p v-if="auditHistory.length === 0" class="empty">暂无审计记录。</p>
           </div>
         </section>
       </div>

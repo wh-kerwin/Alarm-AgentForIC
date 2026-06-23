@@ -8,6 +8,7 @@ from typing import Literal
 Severity = Literal["critical", "high", "medium", "low"]
 AlertStatus = Literal["new", "analyzing", "recommended", "feedback_recorded"]
 Confidence = Literal["high", "medium", "low"]
+RoleName = Literal["EE", "PE", "QE", "PIE", "SHIFT_LEAD", "ADMIN"]
 
 
 @dataclass(frozen=True)
@@ -93,6 +94,8 @@ class AnalysisResult:
     agent_limitations: list[str]
     data_sources: list[str]
     collection_status: CollectionStatus
+    role_context: dict[str, object]
+    safety_gate: dict[str, object]
 
 
 @dataclass
@@ -117,3 +120,24 @@ class KnowledgeCase:
     tags: list[str] = field(default_factory=list)
     source: str = "seed"
     created_at: str = ""
+
+
+@dataclass(frozen=True)
+class RolePolicy:
+    role: RoleName
+    label: str
+    focus: str
+    allowed_records: list[str]
+    blocked_actions: list[str]
+    escalation_targets: list[str]
+
+
+@dataclass
+class AuditRecord:
+    audit_id: str
+    action: str
+    role: str
+    alert_id: str
+    summary: str
+    created_at: str
+    metadata: dict[str, object] = field(default_factory=dict)

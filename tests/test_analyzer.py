@@ -25,6 +25,7 @@ class AnalyzerTests(unittest.TestCase):
         self.assertGreaterEqual(len(result.root_cause_candidates[0].evidence), 1)
         self.assertTrue(result.escalation["required"])
         self.assertEqual(result.collection_status.policy.policy_id, "POLICY-ETCH-VAC")
+        self.assertEqual(result.safety_gate["mode"], "advisory_only")
 
     def test_mock_equipment_alarm_uses_generic_equipment_analysis(self):
         result = analyze_alert("ALM-MOCK-9002")

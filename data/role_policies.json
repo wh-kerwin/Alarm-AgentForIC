@@ -1,0 +1,50 @@
+[
+  {
+    "role": "EE",
+    "label": "EE 设备工程师",
+    "focus": "设备状态、PM、部件、sensor trace、chamber 恢复动作",
+    "allowed_records": ["analysis", "feedback", "knowledge_case"],
+    "blocked_actions": ["release_lot", "modify_recipe", "change_equipment_parameter", "close_high_severity_alert"],
+    "escalation_targets": ["SHIFT_LEAD", "PE"]
+  },
+  {
+    "role": "PE",
+    "label": "PE 工艺工程师",
+    "focus": "recipe、process window、SPC/FDC、APC 调整和工艺验证",
+    "allowed_records": ["analysis", "feedback", "knowledge_case"],
+    "blocked_actions": ["release_lot", "modify_recipe_without_review", "change_equipment_parameter", "close_high_severity_alert"],
+    "escalation_targets": ["SHIFT_LEAD", "EE", "PIE"]
+  },
+  {
+    "role": "QE",
+    "label": "QE 良率/质量工程师",
+    "focus": "yield、defect pattern、wafer map、hold/release 建议和质量风险",
+    "allowed_records": ["analysis", "feedback", "knowledge_case"],
+    "blocked_actions": ["release_lot", "modify_recipe", "change_equipment_parameter", "close_high_severity_alert"],
+    "escalation_targets": ["SHIFT_LEAD", "PIE", "PE"]
+  },
+  {
+    "role": "PIE",
+    "label": "PIE 整合工程师",
+    "focus": "跨站点影响、产品族敏感性、前后道关联和系统性改善",
+    "allowed_records": ["analysis", "feedback", "knowledge_case"],
+    "blocked_actions": ["release_lot", "modify_recipe_without_review", "change_equipment_parameter", "close_high_severity_alert"],
+    "escalation_targets": ["SHIFT_LEAD", "PE", "QE"]
+  },
+  {
+    "role": "SHIFT_LEAD",
+    "label": "Shift Lead 值班主管",
+    "focus": "优先级、影响范围、升级路径、责任人和恢复节奏",
+    "allowed_records": ["analysis", "feedback", "knowledge_case"],
+    "blocked_actions": ["release_lot_without_owner_confirmation", "modify_recipe", "change_equipment_parameter"],
+    "escalation_targets": ["ADMIN", "EE", "PE", "QE", "PIE"]
+  },
+  {
+    "role": "ADMIN",
+    "label": "Admin 系统管理员",
+    "focus": "配置、审计、权限、数据连接器和系统运行状态",
+    "allowed_records": ["analysis", "feedback", "knowledge_case", "configuration"],
+    "blocked_actions": ["release_lot", "modify_recipe", "change_equipment_parameter", "close_high_severity_alert"],
+    "escalation_targets": ["SHIFT_LEAD"]
+  }
+]
