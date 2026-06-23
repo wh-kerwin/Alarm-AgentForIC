@@ -47,6 +47,24 @@ export interface RootCauseCandidate {
   recommended_actions: string[]
 }
 
+export interface CollectionPolicy {
+  policy_id: string
+  alarm_code: string
+  equipment_family: string
+  time_window_minutes: number
+  required_sources: string[]
+  optional_sources: string[]
+  fallback_note: string
+}
+
+export interface CollectionStatus {
+  policy: CollectionPolicy
+  collected_sources: string[]
+  missing_required_sources: string[]
+  missing_optional_sources: string[]
+  fallback_notes: string[]
+}
+
 export interface AnalysisResult {
   alert_id: string
   alert_summary: string
@@ -62,6 +80,7 @@ export interface AnalysisResult {
   }
   agent_limitations: string[]
   data_sources: string[]
+  collection_status: CollectionStatus
 }
 
 export interface FeedbackRecord {

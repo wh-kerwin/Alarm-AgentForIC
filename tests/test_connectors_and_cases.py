@@ -17,6 +17,27 @@ class ConnectorTests(unittest.TestCase):
         self.assertGreaterEqual(len(connector.list_events("ALM-20260623-001")), 1)
         self.assertGreaterEqual(len(connector.list_sop_actions("VAC-LOW-302")), 1)
 
+    def test_json_fixture_connector_normalizes_mock_eap_feed(self):
+        connector = JsonFixtureConnector()
+
+        alert = connector.get_alert("ALM-MOCK-9002")
+
+        self.assertIsNotNone(alert)
+        self.assertEqual(alert.source, "EAP")
+        self.assertEqual(alert.severity, "high")
+        self.assertEqual(alert.alarm_code, "RF-MATCH-221")
+        self.assertEqual(alert.equipment_id, "ETCH-07")
+
+    def test_context_policy_matches_alarm_and_equipment_family(self):
+        connector = JsonFixtureConnector()
+
+        policy = connector.get_collection_policy("RF-MATCH-221", "ETCH")
+        fallback = connector.get_collection_policy("UNKNOWN", "UNKNOWN")
+
+        self.assertEqual(policy.policy_id, "POLICY-ETCH-RF")
+        self.assertEqual(policy.time_window_minutes, 90)
+        self.assertEqual(fallback.policy_id, "POLICY-DEFAULT")
+
 
 class KnowledgeCaseTests(unittest.TestCase):
     def test_create_and_find_local_knowledge_case(self):
@@ -45,4 +66,3 @@ class KnowledgeCaseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

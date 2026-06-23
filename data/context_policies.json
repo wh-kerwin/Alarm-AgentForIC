@@ -1,0 +1,47 @@
+[
+  {
+    "policy_id": "POLICY-ETCH-VAC",
+    "alarm_code": "VAC-LOW-302",
+    "equipment_family": "ETCH",
+    "time_window_minutes": 120,
+    "required_sources": ["EAP", "FDC", "MES", "CMMS", "SOP/OCAP"],
+    "optional_sources": ["APC", "YMS", "KnowledgeBase"],
+    "fallback_note": "若 CMMS 或 FDC 不可用，必须把 sealing 与 pressure trace 判断降级为低置信度。"
+  },
+  {
+    "policy_id": "POLICY-ETCH-RF",
+    "alarm_code": "RF-MATCH-221",
+    "equipment_family": "ETCH",
+    "time_window_minutes": 90,
+    "required_sources": ["EAP", "FDC", "MES", "SOP/OCAP"],
+    "optional_sources": ["CMMS", "APC", "KnowledgeBase"],
+    "fallback_note": "若 FDC RF trace 不可用，只能建议检查 match network，不能判断 chamber hardware root cause。"
+  },
+  {
+    "policy_id": "POLICY-CVD-TEMP",
+    "alarm_code": "TEMP-DRIFT-118",
+    "equipment_family": "CVD",
+    "time_window_minutes": 120,
+    "required_sources": ["FDC", "APC", "MES", "SOP/OCAP"],
+    "optional_sources": ["CMMS", "KnowledgeBase"],
+    "fallback_note": "若 APC 调参记录不可用，必须标注无法判断 offset 是否参与根因。"
+  },
+  {
+    "policy_id": "POLICY-LITHO-DEFECT",
+    "alarm_code": "DEFECT-PATTERN-044",
+    "equipment_family": "LITHO",
+    "time_window_minutes": 1440,
+    "required_sources": ["YMS", "MES", "CMMS", "SOP/OCAP"],
+    "optional_sources": ["FDC", "Metrology", "KnowledgeBase"],
+    "fallback_note": "若 review image 或 wafer map 不可用，缺陷模式判断必须等待 QE 复核。"
+  },
+  {
+    "policy_id": "POLICY-DEFAULT",
+    "alarm_code": "*",
+    "equipment_family": "*",
+    "time_window_minutes": 120,
+    "required_sources": ["EAP", "MES", "SOP/OCAP"],
+    "optional_sources": ["FDC", "CMMS", "KnowledgeBase"],
+    "fallback_note": "当前告警未配置专用策略，使用默认上下文收集策略。"
+  }
+]

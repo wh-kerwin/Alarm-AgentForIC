@@ -369,6 +369,7 @@ h3 {
 }
 
 .side-panel,
+.policy-panel,
 .cases-panel,
 .feedback-panel {
   grid-column: 2;
@@ -573,6 +574,23 @@ h3 {
   border-top: 1px solid var(--line);
 }
 
+.policy-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.policy-section {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.policy-section > strong {
+  font-size: 13px;
+}
+
 .feedback-item p {
   margin-bottom: 5px;
   color: var(--muted);
@@ -601,6 +619,7 @@ h3 {
   .timeline-panel,
   .rca-panel,
   .side-panel,
+  .policy-panel,
   .cases-panel,
   .feedback-panel {
     grid-column: 1;

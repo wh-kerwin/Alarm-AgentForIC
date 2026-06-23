@@ -60,6 +60,8 @@ npm run build
 
 - Sample alert ingestion model
 - Connector boundary backed by local JSON fixtures
+- Mock EAP equipment alarm feed normalization
+- Configurable context collection policy by alarm code/equipment family
 - Rule-backed context correlation
 - Root cause candidates with evidence
 - SOP/OCAP style handling recommendations
@@ -79,6 +81,15 @@ npm run build
 ## Connector Boundary
 
 The current development connector is documented in `docs/architecture/connectors.md`. Production EAP, MES, FDC, SPC, APC, YMS, CMMS, and SOP/OCAP integrations should implement the same backend contract.
+
+Mock data lives in:
+
+- `data/mock_equipment_alarm_feed.json`
+- `data/sample_alerts.json`
+- `data/sample_events.json`
+- `data/context_policies.json`
+- `data/sop.json`
+- `data/knowledge_cases.seed.json`
 
 ## Not Included Yet
 

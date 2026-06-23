@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from server.connectors import get_connector
-from server.models import Alert, AnalysisResult, Evidence, RootCauseCandidate
+from server.models import Alert, AnalysisResult, CollectionStatus, Evidence, RootCauseCandidate
 from server.storage import find_knowledge_cases
 
 
@@ -44,6 +44,9 @@ def analyze_alert(alert_id: str) -> AnalysisResult:
     candidates = _build_candidates(alert)
     handling = get_connector().list_sop_actions(alert.alarm_code)
     data_sources = sorted({event.source for event in events} | {alert.source, "KnowledgeBase", "SOP/OCAP"})
+    family = _equipment_family(alert.equipment_id)
+    policy = get_connector().get_collection_policy(alert.alarm_code, family)
+    collection_status = _build_collection_status(policy, data_sources)
     escalation_required = alert.severity in {"critical", "high"}
     target_role = "Shift Lead + EE/PE" if alert.severity == "critical" else "Owner Engineer"
 
@@ -58,7 +61,7 @@ def analyze_alert(alert_id: str) -> AnalysisResult:
             "wafer": alert.wafer_id,
             "recipe": alert.recipe_id,
             "product": alert.product_id,
-            "time_window": "告警前后 120 分钟",
+            "time_window": f"告警前后 {policy.time_window_minutes} 分钟",
         },
         timeline=events,
         root_cause_candidates=candidates,
@@ -69,11 +72,31 @@ def analyze_alert(alert_id: str) -> AnalysisResult:
             "reason": "高等级告警需要跨角色确认" if escalation_required else "当前可由 owner 跟进",
         },
         agent_limitations=[
-            "当前 MVP 使用内置样例数据，尚未接入真实 EAP/MES/FDC/YMS。",
+            "当前使用 mock/fixture 数据模拟 EAP/MES/FDC/YMS，尚未接入真实厂内接口。",
             "根因置信度来自规则、历史案例和事件证据，不代表最终工程判定。",
             "Agent 只提供建议，不执行放行、改 recipe 或设备控制动作。",
+            *collection_status.fallback_notes,
         ],
         data_sources=data_sources,
+        collection_status=collection_status,
+    )
+
+
+def _build_collection_status(policy, data_sources: list[str]) -> CollectionStatus:
+    source_set = set(data_sources)
+    missing_required = [source for source in policy.required_sources if source not in source_set]
+    missing_optional = [source for source in policy.optional_sources if source not in source_set]
+    notes = []
+    if missing_required or missing_optional:
+        notes.append(policy.fallback_note)
+    if missing_required:
+        notes.append(f"缺少必需数据源：{', '.join(missing_required)}。")
+    return CollectionStatus(
+        policy=policy,
+        collected_sources=data_sources,
+        missing_required_sources=missing_required,
+        missing_optional_sources=missing_optional,
+        fallback_notes=notes,
     )
 
 
@@ -175,7 +198,7 @@ def _build_candidates(alert: Alert) -> list[RootCauseCandidate]:
                 ),
             ]
         )
-    else:
+    elif alert.alarm_code == "DEFECT-PATTERN-044":
         candidates.extend(
             [
                 RootCauseCandidate(
@@ -215,6 +238,59 @@ def _build_candidates(alert: Alert) -> list[RootCauseCandidate]:
                     counter_evidence=["目前最强证据仍指向 TRACK-1 近期维护。"],
                     verification_steps=["追溯前序站点设备、recipe 与 metrology。"],
                     recommended_actions=["若 track 检查无异常，转 PIE 做前序路径分析。"],
+                ),
+            ]
+        )
+    else:
+        case_text = case.root_cause if case else "未命中专用历史案例，使用通用设备告警分析路径。"
+        events = get_connector().list_events(alert.alert_id)
+        event_sources = sorted({event.source for event in events})
+        candidates.extend(
+            [
+                RootCauseCandidate(
+                    rank=1,
+                    cause=f"{alert.alarm_code} 相关设备子系统异常，需要优先结合 FDC trace 与设备状态确认。",
+                    confidence="medium" if events else "low",
+                    category="equipment",
+                    evidence=[
+                        Evidence("告警来源", f"{alert.source} 原始告警已归一化为 Alert Event。", alert.source, "medium"),
+                        Evidence("上下文事件", f"已收集来源：{', '.join(event_sources) if event_sources else '暂无事件上下文'}。", "ContextPolicy", "medium" if events else "low"),
+                        Evidence("历史案例", case_text, "KnowledgeBase", "medium" if case else "low"),
+                    ],
+                    counter_evidence=["该 alarm code 尚未配置专用根因规则。"],
+                    verification_steps=[
+                        "检查该 alarm code 的关键 sensor trace 与设备状态变化。",
+                        "对比同 recipe 最近正常 wafer 或 lot 的 trace。",
+                        "确认近期 PM、recipe change、部件寿命和 chamber 状态。",
+                    ],
+                    recommended_actions=[
+                        "先按 SOP 保留 trace 与上下文数据。",
+                        "若告警等级为 high/critical，升级 owner engineer 复核。",
+                    ],
+                ),
+                RootCauseCandidate(
+                    rank=2,
+                    cause="Recipe 或 lot 上下文变化放大了设备边界条件。",
+                    confidence="low",
+                    category="process-context",
+                    evidence=[
+                        Evidence("Recipe 上下文", f"当前 recipe 为 {alert.recipe_id}，lot 为 {alert.lot_id}。", "MES", "low"),
+                    ],
+                    counter_evidence=["缺少跨 chamber 或 golden lot 对比。"],
+                    verification_steps=["比较同 recipe 在其他 chamber 的表现。", "查看前后 lot 是否出现同类 warning。"],
+                    recommended_actions=["没有设备硬件证据前，不建议调整 recipe。"],
+                ),
+                RootCauseCandidate(
+                    rank=3,
+                    cause="单次软告警或边界波动，需要通过复发性确认风险。",
+                    confidence="low",
+                    category="recurrence",
+                    evidence=[
+                        Evidence("当前状态", f"设备状态为 {alert.current_state}。", alert.source, "low"),
+                    ],
+                    counter_evidence=["缺少该 alarm code 的复发统计。"],
+                    verification_steps=["检索过去 24 小时同设备/同 chamber 告警频次。"],
+                    recommended_actions=["若短时间复发，升级为 repeat alarm 并进入专项排查。"],
                 ),
             ]
         )

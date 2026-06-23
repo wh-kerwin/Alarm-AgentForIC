@@ -18,5 +18,10 @@
     {"time": "2026-06-23 02:17:40", "event_type": "ProcessRunEvent", "title": "Lot processed", "description": "L26A0588 完成 PR coat。", "source": "MES", "severity": "medium"},
     {"time": "2026-06-23 10:42:12", "event_type": "YieldDefectEvent", "title": "Edge-ring pattern", "description": "W02-W25 多片 wafer 出现 edge-ring defect pattern。", "source": "YMS", "severity": "medium"},
     {"time": "2026-06-23 11:06:03", "event_type": "AlarmEvent", "title": "DEFECT-PATTERN-044", "description": "YMS 触发 pattern excursion。", "source": "YMS", "severity": "medium"}
+  ],
+  "ALM-MOCK-9002": [
+    {"time": "2026-06-23 11:58:20", "event_type": "RecipeChangeEvent", "title": "Recipe loaded", "description": "recipe 切换到 POLY-ETCH-70N-D1。", "source": "MES", "severity": "medium"},
+    {"time": "2026-06-23 12:04:10", "event_type": "SensorAnomalyEvent", "title": "RF reflected power rising", "description": "reflected power 连续 4 分钟高于同 recipe P90。", "source": "FDC", "severity": "high"},
+    {"time": "2026-06-23 12:12:42", "event_type": "AlarmEvent", "title": "RF-MATCH-221", "description": "RF match reflected power exceeded soft limit，wafer completed with warning。", "source": "EAP", "severity": "high"}
   ]
 }

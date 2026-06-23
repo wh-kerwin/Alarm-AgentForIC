@@ -1,0 +1,34 @@
+[
+  {
+    "eap_event_id": "EAP-RAW-9001",
+    "tool": "ETCH-07",
+    "module": "CH-B",
+    "code": "VAC-LOW-302",
+    "message": "Chamber vacuum level below process threshold",
+    "event_time": "2026-06-23 09:42:18",
+    "priority": "CRITICAL",
+    "tool_state": "DOWN",
+    "lot": "L26A0619",
+    "wafer": "W17",
+    "recipe": "OX-ETCH-45N-A3",
+    "product": "P-7NAND-128L",
+    "operator_note": "Auto-down during pumpdown stabilization",
+    "source_system": "EAP"
+  },
+  {
+    "eap_event_id": "EAP-RAW-9002",
+    "tool": "ETCH-07",
+    "module": "CH-A",
+    "code": "RF-MATCH-221",
+    "message": "RF match reflected power exceeded soft limit",
+    "event_time": "2026-06-23 12:12:42",
+    "priority": "HIGH",
+    "tool_state": "PROCESS",
+    "lot": "L26A0644",
+    "wafer": "W09",
+    "recipe": "POLY-ETCH-70N-D1",
+    "product": "P-Logic-28",
+    "operator_note": "Soft alarm, wafer completed with warning",
+    "source_system": "EAP"
+  }
+]

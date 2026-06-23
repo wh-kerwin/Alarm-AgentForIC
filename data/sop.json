@@ -16,5 +16,11 @@
     "关联 track maintenance、nozzle replacement 与 edge rinse trend。",
     "抽查前后 lot 是否出现相同 edge-ring pattern。",
     "必要时执行 monitor wafer 验证后恢复。"
+  ],
+  "RF-MATCH-221": [
+    "保留 RF forward/reflected power trace 与 match position trace。",
+    "检查 RF match network、chamber kit 状态与 recent PM 记录。",
+    "对比同 recipe 最近 10 片 wafer 的 reflected power 分布。",
+    "若 reflected power 继续上升，暂停该 chamber 并升级 EE 确认。"
   ]
 }

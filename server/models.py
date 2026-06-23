@@ -41,6 +41,26 @@ class Event:
 
 
 @dataclass(frozen=True)
+class CollectionPolicy:
+    policy_id: str
+    alarm_code: str
+    equipment_family: str
+    time_window_minutes: int
+    required_sources: list[str]
+    optional_sources: list[str]
+    fallback_note: str
+
+
+@dataclass(frozen=True)
+class CollectionStatus:
+    policy: CollectionPolicy
+    collected_sources: list[str]
+    missing_required_sources: list[str]
+    missing_optional_sources: list[str]
+    fallback_notes: list[str]
+
+
+@dataclass(frozen=True)
 class Evidence:
     label: str
     detail: str
@@ -72,6 +92,7 @@ class AnalysisResult:
     escalation: dict[str, str | bool]
     agent_limitations: list[str]
     data_sources: list[str]
+    collection_status: CollectionStatus
 
 
 @dataclass

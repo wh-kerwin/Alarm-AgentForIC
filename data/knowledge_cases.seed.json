@@ -28,5 +28,15 @@
     "tags": ["defect", "edge-ring", "track", "maintenance"],
     "source": "seed",
     "created_at": "2026-06-23T00:00:00Z"
+  },
+  {
+    "case_id": "CASE-ETCH-RF-003",
+    "alarm_code": "RF-MATCH-221",
+    "equipment_family": "ETCH",
+    "root_cause": "RF match network response 变慢或 chamber kit 状态变化导致 reflected power 偏高。",
+    "action": "检查 match position trace、RF cable/contact、chamber kit lifetime，并与 golden wafer trace 对比。",
+    "tags": ["rf", "match", "etch", "fdc"],
+    "source": "seed",
+    "created_at": "2026-06-23T00:00:00Z"
   }
 ]
