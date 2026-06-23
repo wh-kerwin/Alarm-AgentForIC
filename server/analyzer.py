@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from server.connectors import get_connector
+from server.llm import build_explanation
 from server.models import Alert, AnalysisResult, CollectionStatus, Evidence, RootCauseCandidate
 from server.roles import build_role_context, build_safety_gate
 from server.storage import find_knowledge_cases
@@ -43,6 +44,7 @@ def analyze_alert(alert_id: str, role: str | None = None) -> AnalysisResult:
 
     events = get_connector().list_events(alert_id)
     candidates = _build_candidates(alert)
+    llm_explanation = build_explanation(alert, events, candidates)
     handling = get_connector().list_sop_actions(alert.alarm_code)
     data_sources = sorted({event.source for event in events} | {alert.source, "KnowledgeBase", "SOP/OCAP"})
     family = _equipment_family(alert.equipment_id)
@@ -82,6 +84,7 @@ def analyze_alert(alert_id: str, role: str | None = None) -> AnalysisResult:
         collection_status=collection_status,
         role_context=build_role_context(role, alert),
         safety_gate=build_safety_gate(role, alert),
+        llm_explanation=llm_explanation,
     )
 
 

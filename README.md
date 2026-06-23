@@ -69,6 +69,7 @@ npm run build
 - Knowledge case management through API and UI
 - Role-aware advisory mode for EE/PE/QE/PIE/Shift Lead/Admin
 - Audit trail for analysis, feedback, and knowledge-case creation
+- Evidence-only LLM explanation layer with OpenAI support and DeepSeek/Qwen placeholders
 
 ## API Highlights
 
@@ -102,6 +103,32 @@ Mock data lives in:
 The Agent is advisory-only. It can generate analysis, recommendations, feedback records, cases, and audit records. It must not automatically release lots, modify recipes, change equipment parameters, or close high-severity alerts.
 
 The current role context is passed with `X-Agent-Role`. This is not authentication; it is an MVP role simulation for UI behavior, audit metadata, and safety messaging.
+
+## LLM Configuration
+
+The LLM layer is disabled by default.
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Set:
+
+```text
+LLM_PROVIDER=openai
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+DeepSeek and Qwen provider names are reserved but not implemented yet. If selected, the app returns an unavailable explanation and keeps deterministic RCA output working.
+
+## Storage Direction
+
+Backend storage direction is documented in `docs/architecture/backend-services.md`:
+
+- Development relational storage: SQLite
+- Production relational storage: PostgreSQL
+- Process knowledge vector database: ChromaDB
 
 ## Not Included Yet
 

@@ -65,6 +65,17 @@ export interface CollectionStatus {
   fallback_notes: string[]
 }
 
+export interface LlmExplanation {
+  status: 'disabled' | 'generated' | 'unavailable' | 'error'
+  provider: string
+  model: string
+  summary: string
+  evidence_notes: string[]
+  uncertainty: string[]
+  suggested_next_questions: string[]
+  safety_note: string
+}
+
 export interface AnalysisResult {
   alert_id: string
   alert_summary: string
@@ -98,6 +109,7 @@ export interface AnalysisResult {
     message: string
     alert_severity: string
   }
+  llm_explanation: LlmExplanation
 }
 
 export interface FeedbackRecord {

@@ -82,6 +82,18 @@ class RootCauseCandidate:
 
 
 @dataclass(frozen=True)
+class LLMExplanation:
+    status: Literal["disabled", "generated", "unavailable", "error"]
+    provider: str
+    model: str
+    summary: str
+    evidence_notes: list[str]
+    uncertainty: list[str]
+    suggested_next_questions: list[str]
+    safety_note: str
+
+
+@dataclass(frozen=True)
 class AnalysisResult:
     alert_id: str
     alert_summary: str
@@ -96,6 +108,7 @@ class AnalysisResult:
     collection_status: CollectionStatus
     role_context: dict[str, object]
     safety_gate: dict[str, object]
+    llm_explanation: LLMExplanation
 
 
 @dataclass
