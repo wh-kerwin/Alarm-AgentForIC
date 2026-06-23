@@ -1,0 +1,22 @@
+{
+  "ALM-20260623-001": [
+    {"time": "2026-06-23 08:15:00", "event_type": "MaintenanceEvent", "title": "PM close", "description": "CH-B 完成 dry pump filter 清洁，设备恢复生产。", "source": "CMMS", "severity": "medium"},
+    {"time": "2026-06-23 09:21:36", "event_type": "RecipeChangeEvent", "title": "Recipe loaded", "description": "recipe 从 OX-ETCH-45N-A2 切换到 OX-ETCH-45N-A3。", "source": "MES", "severity": "medium"},
+    {"time": "2026-06-23 09:34:08", "event_type": "SensorAnomalyEvent", "title": "Pressure variance rising", "description": "foreline pressure 方差连续 6 分钟高于同 recipe P95。", "source": "FDC", "severity": "high"},
+    {"time": "2026-06-23 09:40:51", "event_type": "StateChangeEvent", "title": "Throttle valve oscillation", "description": "throttle valve position 在 42%-78% 之间快速摆动。", "source": "EAP", "severity": "high"},
+    {"time": "2026-06-23 09:42:18", "event_type": "AlarmEvent", "title": "VAC-LOW-302", "description": "真空不足报警触发，设备进入 DOWN。", "source": "EAP", "severity": "critical"},
+    {"time": "2026-06-23 09:45:07", "event_type": "HumanActionEvent", "title": "Lot held", "description": "值班工程师 hold L26A0619，等待设备确认。", "source": "MES", "severity": "medium"}
+  ],
+  "ALM-20260623-002": [
+    {"time": "2026-06-23 07:58:22", "event_type": "APCAdjustmentEvent", "title": "APC offset changed", "description": "APC 对 heater zone 2 增加 +1.8C offset。", "source": "APC", "severity": "medium"},
+    {"time": "2026-06-23 09:55:30", "event_type": "ProcessRunEvent", "title": "Lot started", "description": "L26A0621 开始在 CVD-12 CH-A 加工。", "source": "MES", "severity": "medium"},
+    {"time": "2026-06-23 10:12:10", "event_type": "SensorAnomalyEvent", "title": "Temperature drift", "description": "zone 2 temperature 连续 9 个采样点上升。", "source": "FDC", "severity": "high"},
+    {"time": "2026-06-23 10:18:44", "event_type": "SPCFDCViolationEvent", "title": "TEMP-DRIFT-118", "description": "FDC guard band 被突破。", "source": "FDC", "severity": "high"}
+  ],
+  "ALM-20260623-003": [
+    {"time": "2026-06-22 21:33:18", "event_type": "MaintenanceEvent", "title": "Nozzle replaced", "description": "TRACK-1 edge rinse nozzle 更换。", "source": "CMMS", "severity": "medium"},
+    {"time": "2026-06-23 02:17:40", "event_type": "ProcessRunEvent", "title": "Lot processed", "description": "L26A0588 完成 PR coat。", "source": "MES", "severity": "medium"},
+    {"time": "2026-06-23 10:42:12", "event_type": "YieldDefectEvent", "title": "Edge-ring pattern", "description": "W02-W25 多片 wafer 出现 edge-ring defect pattern。", "source": "YMS", "severity": "medium"},
+    {"time": "2026-06-23 11:06:03", "event_type": "AlarmEvent", "title": "DEFECT-PATTERN-044", "description": "YMS 触发 pattern excursion。", "source": "YMS", "severity": "medium"}
+  ]
+}

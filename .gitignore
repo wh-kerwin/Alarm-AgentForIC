@@ -46,6 +46,8 @@ server/dist/
 public/assets/generated/
 
 # Local runtime data
+data/feedback.json
+data/knowledge_cases.local.json
 *.db
 *.sqlite
 *.sqlite3

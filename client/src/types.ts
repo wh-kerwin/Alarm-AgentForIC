@@ -75,3 +75,13 @@ export interface FeedbackRecord {
   created_at: string
 }
 
+export interface KnowledgeCase {
+  case_id: string
+  alarm_code: string
+  equipment_family: string
+  root_cause: string
+  action: string
+  tags: string[]
+  source: string
+  created_at: string
+}

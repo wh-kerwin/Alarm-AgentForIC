@@ -4,16 +4,17 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from server.data import ALERTS, EVENTS_BY_ALERT, KNOWLEDGE_CASES, SOP_BY_ALARM_CODE
+from server.connectors import get_connector
 from server.models import Alert, AnalysisResult, Evidence, RootCauseCandidate
+from server.storage import find_knowledge_cases
 
 
 def list_alerts() -> list[Alert]:
-    return ALERTS
+    return get_connector().list_alerts()
 
 
 def get_alert(alert_id: str) -> Alert | None:
-    return next((alert for alert in ALERTS if alert.alert_id == alert_id), None)
+    return get_connector().get_alert(alert_id)
 
 
 def _equipment_family(equipment_id: str) -> str:
@@ -22,18 +23,11 @@ def _equipment_family(equipment_id: str) -> str:
 
 def _matching_case(alert: Alert):
     family = _equipment_family(alert.equipment_id)
-    return next(
-        (
-            case
-            for case in KNOWLEDGE_CASES
-            if case.alarm_code == alert.alarm_code and case.equipment_family == family
-        ),
-        None,
-    )
+    return next(iter(find_knowledge_cases(alert.alarm_code, family)), None)
 
 
 def _has_event(alert_id: str, event_type: str, text: str | None = None) -> bool:
-    events = EVENTS_BY_ALERT.get(alert_id, [])
+    events = get_connector().list_events(alert_id)
     for event in events:
         haystack = f"{event.title} {event.description}".lower()
         if event.event_type == event_type and (text is None or text.lower() in haystack):
@@ -46,9 +40,9 @@ def analyze_alert(alert_id: str) -> AnalysisResult:
     if alert is None:
         raise KeyError(alert_id)
 
-    events = EVENTS_BY_ALERT.get(alert_id, [])
+    events = get_connector().list_events(alert_id)
     candidates = _build_candidates(alert)
-    handling = SOP_BY_ALARM_CODE.get(alert.alarm_code, ["收集上下文数据后由值班工程师确认处置动作。"])
+    handling = get_connector().list_sop_actions(alert.alarm_code)
     data_sources = sorted({event.source for event in events} | {alert.source, "KnowledgeBase", "SOP/OCAP"})
     escalation_required = alert.severity in {"critical", "high"}
     target_role = "Shift Lead + EE/PE" if alert.severity == "critical" else "Owner Engineer"
@@ -226,4 +220,3 @@ def _build_candidates(alert: Alert) -> list[RootCauseCandidate]:
         )
 
     return candidates
-

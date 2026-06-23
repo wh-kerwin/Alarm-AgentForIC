@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 
 from server.analyzer import analyze_alert, get_alert, list_alerts
 from server.models import FeedbackRecord
-from server.storage import list_feedback, save_feedback
+from server.storage import create_knowledge_case, find_knowledge_cases, list_feedback, list_knowledge_cases, save_feedback
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC_DIR = ROOT / "client" / "dist"
@@ -37,6 +37,8 @@ class AppHandler(BaseHTTPRequestHandler):
             return self._json({"status": "ok", "version": "0.1.0"})
         if parsed.path == "/api/alerts":
             return self._json(list_alerts())
+        if parsed.path == "/api/knowledge-cases":
+            return self._json(list_knowledge_cases())
         if parsed.path.startswith("/api/alerts/"):
             parts = parsed.path.strip("/").split("/")
             if len(parts) == 3:
@@ -51,6 +53,12 @@ class AppHandler(BaseHTTPRequestHandler):
                     return self._json({"error": "alert_not_found"}, status=404)
             if len(parts) == 4 and parts[3] == "feedback":
                 return self._json(list_feedback(parts[2]))
+            if len(parts) == 4 and parts[3] == "knowledge-cases":
+                alert = get_alert(parts[2])
+                if alert is None:
+                    return self._json({"error": "alert_not_found"}, status=404)
+                equipment_family = alert.equipment_id.split("-", maxsplit=1)[0]
+                return self._json(find_knowledge_cases(alert.alarm_code, equipment_family))
         return self._static(parsed.path)
 
     def do_POST(self):  # noqa: N802
@@ -80,6 +88,13 @@ class AppHandler(BaseHTTPRequestHandler):
             if not record.final_root_cause or not record.action_taken:
                 return self._json({"error": "final_root_cause_and_action_taken_required"}, status=400)
             return self._json(save_feedback(record), status=201)
+
+        if parsed.path == "/api/knowledge-cases":
+            body = self._read_json_body()
+            try:
+                return self._json(create_knowledge_case(body), status=201)
+            except ValueError as error:
+                return self._json({"error": str(error)}, status=400)
 
         return self._json({"error": "not_found"}, status=404)
 

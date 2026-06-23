@@ -59,10 +59,26 @@ npm run build
 ## Current MVP Scope
 
 - Sample alert ingestion model
+- Connector boundary backed by local JSON fixtures
 - Rule-backed context correlation
 - Root cause candidates with evidence
 - SOP/OCAP style handling recommendations
 - Engineer feedback storage in `data/feedback.json`
+- Knowledge case management through API and UI
+
+## API Highlights
+
+- `GET /api/alerts`
+- `POST /api/alerts/{alert_id}/analyze`
+- `GET /api/alerts/{alert_id}/feedback`
+- `POST /api/alerts/{alert_id}/feedback`
+- `GET /api/knowledge-cases`
+- `POST /api/knowledge-cases`
+- `GET /api/alerts/{alert_id}/knowledge-cases`
+
+## Connector Boundary
+
+The current development connector is documented in `docs/architecture/connectors.md`. Production EAP, MES, FDC, SPC, APC, YMS, CMMS, and SOP/OCAP integrations should implement the same backend contract.
 
 ## Not Included Yet
 
@@ -71,4 +87,3 @@ npm run build
 - Authentication and role-based permissions
 - Production database
 - Automatic equipment control or lot release
-

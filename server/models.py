@@ -94,4 +94,5 @@ class KnowledgeCase:
     root_cause: str
     action: str
     tags: list[str] = field(default_factory=list)
-
+    source: str = "seed"
+    created_at: str = ""

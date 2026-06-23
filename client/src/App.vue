@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { analyzeAlert, getAlerts, getFeedback, getHealth, submitFeedback } from './api'
-import type { Alert, AnalysisResult, FeedbackRecord } from './types'
+import { analyzeAlert, createKnowledgeCase, getAlerts, getFeedback, getHealth, getRelatedKnowledgeCases, submitFeedback } from './api'
+import type { Alert, AnalysisResult, FeedbackRecord, KnowledgeCase } from './types'
 
 const alerts = ref<Alert[]>([])
 const selectedAlertId = ref('')
 const analysis = ref<AnalysisResult | null>(null)
 const feedbackHistory = ref<FeedbackRecord[]>([])
+const relatedCases = ref<KnowledgeCase[]>([])
 const apiStatus = ref('checking')
 const isAnalyzing = ref(false)
 const feedbackMessage = ref('')
+const caseMessage = ref('')
 
 const feedbackForm = reactive({
   selected_cause_rank: '',
@@ -17,6 +19,12 @@ const feedbackForm = reactive({
   action_taken: '',
   recurrence_risk: 'medium' as 'high' | 'medium' | 'low',
   notes: '',
+})
+
+const caseForm = reactive({
+  root_cause: '',
+  action: '',
+  tags: '',
 })
 
 const selectedAlert = computed(() => alerts.value.find((alert) => alert.alert_id === selectedAlertId.value) ?? null)
@@ -63,17 +71,27 @@ async function loadFeedback() {
   feedbackHistory.value = await getFeedback(selectedAlertId.value)
 }
 
+async function loadRelatedCases() {
+  if (!selectedAlertId.value) return
+  relatedCases.value = await getRelatedKnowledgeCases(selectedAlertId.value)
+}
+
 async function selectAlert(alertId: string) {
   selectedAlertId.value = alertId
   analysis.value = null
   feedbackMessage.value = ''
+  caseMessage.value = ''
   feedbackForm.selected_cause_rank = ''
   feedbackForm.final_root_cause = ''
   feedbackForm.action_taken = ''
   feedbackForm.recurrence_risk = 'medium'
   feedbackForm.notes = ''
+  caseForm.root_cause = ''
+  caseForm.action = ''
+  caseForm.tags = ''
   await runAnalysis()
   await loadFeedback()
+  await loadRelatedCases()
 }
 
 async function submitEngineerFeedback() {
@@ -94,6 +112,24 @@ async function submitEngineerFeedback() {
   await loadFeedback()
 }
 
+async function submitKnowledgeCase() {
+  if (!selectedAlert.value) return
+  await createKnowledgeCase({
+    alarm_code: selectedAlert.value.alarm_code,
+    equipment_family: selectedAlert.value.equipment_id.split('-')[0],
+    root_cause: caseForm.root_cause,
+    action: caseForm.action,
+    tags: caseForm.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+    source: 'engineer',
+  })
+  caseMessage.value = '案例已加入知识库，并会被后续分析复用。'
+  caseForm.root_cause = ''
+  caseForm.action = ''
+  caseForm.tags = ''
+  await loadRelatedCases()
+  await runAnalysis()
+}
+
 onMounted(async () => {
   try {
     const health = await getHealth()
@@ -106,6 +142,7 @@ onMounted(async () => {
   if (selectedAlertId.value) {
     await runAnalysis()
     await loadFeedback()
+    await loadRelatedCases()
   }
 })
 </script>
@@ -279,6 +316,47 @@ onMounted(async () => {
           <p v-else class="empty">分析完成后显示 SOP/OCAP 处置建议。</p>
         </section>
 
+        <section class="panel cases-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Knowledge base</p>
+              <h2>相关案例库</h2>
+            </div>
+          </div>
+
+          <div class="case-list">
+            <article v-for="item in relatedCases" :key="item.case_id" class="case-item">
+              <div class="candidate-meta">
+                <span class="pill">{{ item.case_id }}</span>
+                <span class="pill">{{ item.source }}</span>
+              </div>
+              <strong>{{ item.root_cause }}</strong>
+              <p>{{ item.action }}</p>
+              <div class="sources">
+                <span v-for="tag in item.tags" :key="`${item.case_id}-${tag}`" class="pill">{{ tag }}</span>
+              </div>
+            </article>
+            <p v-if="relatedCases.length === 0" class="empty">当前告警暂无匹配历史案例。</p>
+          </div>
+
+          <form class="feedback-form case-form" @submit.prevent="submitKnowledgeCase">
+            <label>
+              新案例根因
+              <textarea v-model="caseForm.root_cause" rows="2" required placeholder="沉淀工程确认后的根因"></textarea>
+            </label>
+            <label>
+              标准处置动作
+              <textarea v-model="caseForm.action" rows="2" required placeholder="沉淀可复用的检查/恢复动作"></textarea>
+            </label>
+            <label>
+              标签
+              <input v-model="caseForm.tags" placeholder="vacuum, pm, etch" />
+            </label>
+            <button type="submit" class="secondary-button">加入案例库</button>
+            <p class="form-message">{{ caseMessage }}</p>
+          </form>
+        </section>
+
         <section class="panel feedback-panel">
           <div class="panel-head">
             <div>
@@ -335,4 +413,3 @@ onMounted(async () => {
     </main>
   </div>
 </template>
-

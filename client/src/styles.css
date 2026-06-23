@@ -369,6 +369,7 @@ h3 {
 }
 
 .side-panel,
+.cases-panel,
 .feedback-panel {
   grid-column: 2;
 }
@@ -506,6 +507,7 @@ h3 {
 }
 
 .feedback-form select,
+.feedback-form input,
 .feedback-form textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -516,6 +518,7 @@ h3 {
 }
 
 .feedback-form select:focus,
+.feedback-form input:focus,
 .feedback-form textarea:focus {
   outline: 2px solid rgba(31, 122, 77, 0.18);
   border-color: var(--accent);
@@ -539,6 +542,35 @@ h3 {
   border: 1px solid var(--line);
   background: #fbfcf8;
   font-size: 13px;
+}
+
+.case-list {
+  display: grid;
+  gap: 10px;
+}
+
+.case-item {
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: #fbfcf8;
+}
+
+.case-item strong {
+  display: block;
+  margin: 8px 0 6px;
+  line-height: 1.35;
+}
+
+.case-item p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.case-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
 }
 
 .feedback-item p {
@@ -569,6 +601,7 @@ h3 {
   .timeline-panel,
   .rca-panel,
   .side-panel,
+  .cases-panel,
   .feedback-panel {
     grid-column: 1;
   }
@@ -593,4 +626,3 @@ h3 {
     grid-template-columns: 1fr;
   }
 }
-

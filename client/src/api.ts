@@ -1,4 +1,4 @@
-import type { Alert, AnalysisResult, FeedbackRecord } from './types'
+import type { Alert, AnalysisResult, FeedbackRecord, KnowledgeCase } from './types'
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(path, {
@@ -30,6 +30,10 @@ export function getFeedback(alertId: string) {
   return request<FeedbackRecord[]>(`/api/alerts/${alertId}/feedback`)
 }
 
+export function getRelatedKnowledgeCases(alertId: string) {
+  return request<KnowledgeCase[]>(`/api/alerts/${alertId}/knowledge-cases`)
+}
+
 export function submitFeedback(alertId: string, payload: {
   selected_cause_rank: number | null
   final_root_cause: string
@@ -43,3 +47,16 @@ export function submitFeedback(alertId: string, payload: {
   })
 }
 
+export function createKnowledgeCase(payload: {
+  alarm_code: string
+  equipment_family: string
+  root_cause: string
+  action: string
+  tags: string[]
+  source: string
+}) {
+  return request<KnowledgeCase>('/api/knowledge-cases', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}

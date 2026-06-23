@@ -1,0 +1,32 @@
+[
+  {
+    "case_id": "CASE-ETCH-VAC-009",
+    "alarm_code": "VAC-LOW-302",
+    "equipment_family": "ETCH",
+    "root_cause": "PM 后 foreline sealing 不稳定导致抽气效率下降。",
+    "action": "检查 dry pump/filter sealing、foreline leak rate、throttle valve response，再执行 chamber qualification。",
+    "tags": ["vacuum", "pm", "foreline", "etch"],
+    "source": "seed",
+    "created_at": "2026-06-23T00:00:00Z"
+  },
+  {
+    "case_id": "CASE-CVD-TEMP-014",
+    "alarm_code": "TEMP-DRIFT-118",
+    "equipment_family": "CVD",
+    "root_cause": "APC offset 与 heater zone sensor calibration 偏差叠加造成温度漂移。",
+    "action": "冻结 APC offset，复核 zone sensor calibration，比较 golden lot trace。",
+    "tags": ["temperature", "apc", "fdc", "cvd"],
+    "source": "seed",
+    "created_at": "2026-06-23T00:00:00Z"
+  },
+  {
+    "case_id": "CASE-LITHO-DEF-006",
+    "alarm_code": "DEFECT-PATTERN-044",
+    "equipment_family": "LITHO",
+    "root_cause": "edge rinse nozzle 更换后角度偏移造成边缘残胶。",
+    "action": "检查 nozzle angle、spin profile、edge bead removal trend，必要时重做 qualification。",
+    "tags": ["defect", "edge-ring", "track", "maintenance"],
+    "source": "seed",
+    "created_at": "2026-06-23T00:00:00Z"
+  }
+]

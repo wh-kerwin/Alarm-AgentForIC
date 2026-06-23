@@ -1,0 +1,20 @@
+{
+  "VAC-LOW-302": [
+    "保持设备 DOWN 状态，确认 chamber 内无 wafer 安全风险。",
+    "检查 dry pump、foreline、throttle valve 与 chamber door seal。",
+    "比较告警前后 pressure、valve position、pump current trace。",
+    "完成 leak check 与 qualification 后再申请恢复生产。"
+  ],
+  "TEMP-DRIFT-118": [
+    "暂停自动 APC offset 更新，保留当前 trace。",
+    "对比同 recipe golden lot 的 zone temperature profile。",
+    "检查 heater zone sensor calibration 与 recent maintenance。",
+    "若 drift 持续扩大，hold 当前 lot 并升级 PE/EE 联合确认。"
+  ],
+  "DEFECT-PATTERN-044": [
+    "hold 受影响 lot，确认 defect review image 与 wafer map pattern。",
+    "关联 track maintenance、nozzle replacement 与 edge rinse trend。",
+    "抽查前后 lot 是否出现相同 edge-ring pattern。",
+    "必要时执行 monitor wafer 验证后恢复。"
+  ]
+}
